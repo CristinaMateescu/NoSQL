@@ -1,0 +1,186 @@
+TEMA2POO
+MATEESCU CRISTINA-RAMONA, 321CB
+
+	
+	= Explicare idee generala = 
+	
+		* Baza de date este o clasa ce contine un array de entitati si un array de noduri.
+		* Array-ul de noduri reprezinta efectiv baza de date;
+		  In noduri sunt inserate Instantele
+		* Unei entitati ii corespund mai multe instante
+		  Entitatile contin doar informatie text : denumirile campurilor, tipurile de date (Stocate ca string)
+		* Instantele contin valori pentru campuri si au tipurile de date corespunzatoare 
+		* Indicii din array-urile din Instante / Entitati corespund 1:1 
+		
+	= Clasa Tema2 ce contine metoda main =
+		
+	! Metodele apelate in main vor fi explicate in clasele in care au fost definite
+		
+		- Se citeste linie cu linie din fisierul de intrare 
+		- String parts[] contine elementele unei linii = comanda
+		- part[0] va fi, prin urmare, numele comenzii :
+
+			* CREATEDB
+				Folosim metoda 'setDB' din clasa Database pentru a initializa o DB
+				Parametri sunt : nume, nr. noduri, capacitate noduri 
+
+			* CREATE
+				Cream o Entitate noua, folosind constructorul cu parametri
+				Adaugam entitatea in array-ul de entitati din DB folosind metoda 'add_entity'
+
+			* INSERT
+				Cream Instanta, tinand cont de RF
+				Avem nevoie de copii independente => Obiecte diferite 
+				Apelam metoda 'getNodeToInsert' din DB, care returneaza cel mai ocupat nod inca disponibil
+									si care nu contine instanta
+				Inseram Instanta
+				BONUS: tratam cazul in care nu mai exista noduri libere ( metoda a intors -1 )
+					=> Se apeleaza metoda 'addNode' din DB care creeaza si insereaza un nod nou in DB
+					=> Se insereaza instanta in acel nod
+
+			* SNAPSHOTDB
+				Apelam metoda 'snapshotdb' din DB
+			
+			* DELETE 
+				Apelam metoda 'delete' cu parametrii - numele entitatii si cheia
+		
+			* GET
+				Apelam metoda 'printInstance'
+
+			* UPDATE
+				Apelam metoda 'update'
+
+			* CLEANUP		
+				Apelam metoda 'cleanup'
+
+	= Clasa Database = 
+		
+		* Baza de date contine :
+			- un Array de Entitati	- contin denumirile campurilor si tipurile de date 
+			- Un Array de Noduri 	- contin Instantele cu valori ale campurilor 
+			- name, capacitate, nr. noduri
+		
+		* Metoda 'setDB' 
+			- primeste argumentele : nume, nr.noduri, capacitate 
+			- realizeaza initializarea bazei de date cu aceste valori
+			- sunt create si adaugate in Array si Nodurile
+
+		* Metoda 'add_entity'
+			- adauga o Entitate in Array-ul de Entitati
+		
+		* Metoda 'getNodeToInsert'
+			- returneaza cel mai ocupat Nod care nu contine Instanta primita ca parametru
+			- aceasta metoda este folosita pentru INSERT
+			- Nodul nu trebuie sa contina deja Instanta pentru a satisface conditiile de inserare
+			- Iteram prin Array-ul de Noduri pentru a calcula Nodul 
+			  cu dimensiunea maxima care nu si-a atins capacitatea;
+			- Pentru a verifica daca Instanta este continuta de Nod 
+			  folosim metoda 'containsInstance' din clasa Nod;
+			
+			- returneaza indexul nodului sau -1 daca nu exista
+		
+		* Metoda 'getEntity'
+			- itereaza prin Array-ul de Entitati 
+			- returneaza Entitatea dupa un nume dat
+
+		* Metoda 'insertInstanceInNode'
+			-insereaza o instanta intr-un nod si actualizeaza dimensiunea nodului
+		
+		* Metoda 'snapshotdb'
+			- Variabila exists_Nonempty_nodes ne va indica daca DB e goala
+			- Iteram prin vectorul de noduri
+				- Pentru fiecare noduri, afisam instantele apeland metoda 'printInstances'
+		
+		* Metoda 'delete' 
+			- Iteram prin Noduri, apoi Instante pentru a cauta Instanta care trebuie eliminata
+			- se actualizeaza dimensiunea
+		
+		* Metoda 'printInstance'
+			- Pentru fiecare Nod al DB
+			- Parcurgem prin indici Instantele si pentru fiecare Instanta apelam 'printValues'
+			- metoda va printa valorile pentru campurile Instantei
+			- Daca instanta nu a fost gasita, se afiseaza mesajul corespunzator
+		
+		* Metoda 'update'
+			- Actualizeaza anumite campuri ale unei Instante
+			- Cautam Instanta iterand prin Array-uri
+			- Pentru fiecare instanta se apeleaza metoda 'update' din clasa Instance
+			  Acea metoda reseteaza valorile campurilor si actualizeaza timestamp-ul
+			  Dupa acest timestamp se va realiza si sortarea ( suprascriere compareTo  - clasa Instance ) 
+		
+		* Metoda 'cleanup'
+			- Parcurgem nodurile; ne folosim de apeluri ale metodei 'getOldInstance' 
+			- Acea metoda returneaza o instanta cu timestamp-ul mai vechi de acea valoare data
+			- Si ea returneaza -1 daca nu exista o astfel de instanta
+			- Instanta returnata se elimina prin apelul 'delete'
+		
+		* Metoda 'addNode'
+			- In cazul in care DB este full, se apeleaza aceasta metoda
+			- Ea Creeaza si adauga un nod in Array-ul de noduri
+
+
+	= Clasa Entity = 
+			
+		- o Entitate este descrisa RF, nume, nr-atribute
+		- 2 Array-uri : fields - Array-ul cu numele campurilor 
+				types  - Array-ul cu tipurile lor de date
+		- cele doua Array-uri sunt construite astfel incat indicii sa corespunda 
+		- Asta inseamna ca un anume atribut i va avea denumirea in fields.get(i) si tipul in types.get(i)
+		
+		* Constructorul cu parametri 
+			- seteaza o Entitate
+			- Adauga campurile, folosind apeluri de 'add_field' care seteaza ambele Array-uri
+			- metoda 'add_field' este definita chiar imediat
+		
+		* Metoda 'getAtributeIndex'
+			- Cauta un atribut dupa denumire - adica in Array-ul fields
+			- returneaza pozitia sa in array
+		
+	= Clasa Instance = 
+		- implementeaza interfata Comparable
+		- contine nr de atribute, numele entitatii din care face parte, timestamp-ul 
+		- un array de valori care corespund campurilor din Entitate si au tipul corespunzator
+	
+		* Constructorul cu parametri 
+			- initializeaza o instanta
+			- adauga atributele
+			- se verifica Array-ul de types din Entitate pentru a vedea ce tip au atributele
+			- si se initializeaza in mod corespunzator
+		
+		* Suprascriere compareTo pentru sortare
+			- in functie de timestamp
+		
+		* Metoda 'add' 
+			- adauga un obiect in array-ul de valori
+		
+		* Metoda 'printValues'
+			- Printarea tuturor atributelor ale unei instante
+			- Pentru atributele de tip Float se tine cont de formatul precizat
+
+		* Metoda 'update'
+			- primeste un array de atribute ce trebuie actualizate
+			- ne folosim de apeluri ale 'getAtributeIndex' pentru a cauta fiecare atribut
+			- setam noua valoare a atributului folosind set
+			- actualizam timestampul
+
+	= Clasa Nod = 
+		
+		- contine capacitate, dimesiune si un Array de instante
+		
+		* Metoda 'containsInstance' 
+			- itereaza prin instante si cauta o anumita instanta
+			- returneaza true/false
+		
+		* Metoda 'printInstances'
+			- Pentru fiecare atribut al fiecare instante
+			- Se printeaza dupa formatul corespunzator cerut 
+			! Metodele de printare au fost folosite - o parte la snapshotdb, o parte la get
+
+		* Metoda 'getOldInstance'
+			- cauta prima instanta mai veche de un timestamp dat si ii returneaza indexul
+			- daca nu exista, se returneaza -1
+		
+		 
+
+
+
